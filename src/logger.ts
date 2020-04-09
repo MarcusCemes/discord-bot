@@ -1,3 +1,8 @@
 import pino from "pino";
 
-export const logger = pino({ prettyPrint: process.env.NODE_ENV !== "PRODUCTION" });
+const PRODUCTION = process.env.NODE_ENV === "PRODUCTION";
+
+export const logger = pino({
+  prettyPrint: !PRODUCTION,
+  level: PRODUCTION ? "info" : "trace"
+});
