@@ -31,24 +31,34 @@ export async function TimeToBot(token: string): Promise<void> {
     }
 
     const action = processMessage(message);
-    if (action !== null && typeof HANDLERS[action as Messages] === "function") {
-      try {
-        await HANDLERS[action as Messages](client, message as Message);
-      } catch (err) {
-        console.error("Message handler", { err });
+    if (action !== false) {
+      if (
+        action !== null &&
+        typeof HANDLERS[action as Messages] === "function"
+      ) {
+        try {
+          await HANDLERS[action as Messages](client, message as Message);
+        } catch (err) {
+          console.error("Message handler", { err });
+        }
+      } else if (message.reply) {
+        await message.reply("I didn't understand what you meant.");
       }
-    } else if (message.reply) {
-      await message.reply("I didn't understand what you meant.");
     }
   });
 }
 
-/** Process the message and choose an action */
-function processMessage(message: Message | PartialMessage): Messages | null {
+/**
+ * Process the message and choose an action. Returns null if the action does not exist,
+ * or null if the message was not meant for the bot.
+ */
+function processMessage(
+  message: Message | PartialMessage
+): Messages | false | null {
   if (!(message instanceof Message)) return null;
 
   const cmd = getCommand(message);
-  if (cmd === null) return null;
+  if (cmd === null) return false;
 
   if (has(cmd, ["joke", "funny"])) {
     return Messages.JOKE;
