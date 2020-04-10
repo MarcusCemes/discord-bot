@@ -1,33 +1,12 @@
-import { Client, Message } from "discord.js";
-import { BayesClassifier } from "natural";
+import { Client, Message, PartialMessage } from "discord.js";
 
 import { logger } from "../logger";
-import { DOCUMENTS, HANDLERS, Messages } from "./message";
+import { HANDLERS, Messages } from "./message";
+
+const COMMAND_DELIMITER = "$";
 
 export async function TimeToBot(token: string): Promise<void> {
   logger.info("Starting up");
-  logger.info("Training natural language processor");
-
-  // Create the natural language classifier
-  const classifier = new BayesClassifier();
-  for (const [stem, texts] of Object.entries(DOCUMENTS)) {
-    logger.debug("[NLP] Adding stem " + stem);
-    for (const text of texts) {
-      classifier.addDocument(text, stem);
-    }
-  }
-
-  // Train the classifier
-  logger.debug("[NLP] Starting training");
-  const trainingHandler = (progress: any) => {
-    if (progress.index === progress.total - 1) {
-      logger.info("[NLP] Completed training");
-      classifier.events.off("trainedWithDocument", trainingHandler);
-      classifier.save("classifier.json", () => {});
-    }
-  };
-  classifier.events.on("trainedWithDocument", trainingHandler);
-  classifier.train();
 
   // Setup the discord client
   const client = new Client();
@@ -39,47 +18,82 @@ export async function TimeToBot(token: string): Promise<void> {
   }
 
   // Setup the event handlers
-  client.on("message", async message => {
-    if (!message.mentions?.users?.has(client.user!.id)) return;
-
+  client.on("message", async (message) => {
+    // Ignore empty messages
     if (message.content === null) {
       logger.warn("Null message content");
       return;
     }
 
-    const classification = classifier.getClassifications(
-      removeMentions(message.content!)
-    );
-    logger.debug({
-      content: message.content,
-      action: classification[0].label,
-      probability: classification[0].value
-    });
-    if (typeof HANDLERS[classification[0].label as Messages] === "function") {
+    // Ignore messages from this bot
+    if (message.author?.id === client.user?.id) {
+      return;
+    }
+
+    const action = processMessage(message);
+    if (action !== null && typeof HANDLERS[action as Messages] === "function") {
       try {
-        await HANDLERS[classification[0].label as Messages](
-          client,
-          message as Message
-        );
+        await HANDLERS[action as Messages](client, message as Message);
       } catch (err) {
         console.error("Message handler", { err });
       }
+    } else if (message.reply) {
+      await message.reply("I didn't understand what you meant.");
     }
   });
 }
 
-/** A naive implementation to remove complex mentions from messages
- * in order to assist the Natural Language algorithm.
- */
-function removeMentions(text: string): string {
-  if (typeof text !== "string") return text;
+/** Process the message and choose an action */
+function processMessage(message: Message | PartialMessage): Messages | null {
+  if (!(message instanceof Message)) return null;
 
-  let cleanText: string = text;
-  let index: number;
-  while ((index = cleanText.indexOf("<@")) !== -1) {
-    const end = cleanText.indexOf(">", index);
-    cleanText = cleanText.slice(0, index) + cleanText.slice(end + 1);
+  const cmd = getCommand(message);
+  if (cmd === null) return null;
+
+  if (has(cmd, ["joke", "funny"])) {
+    return Messages.JOKE;
+  } else if (has(cmd, ["insult", "mean"])) {
+    return Messages.INSULT;
+  } else if (has(cmd, ["chameleon"])) {
+    return Messages.CHAMELEON;
+  } else if (has(cmd, ["hello", "hey", "hi", "how are you"])) {
+    return Messages.GREET;
   }
 
-  return cleanText;
+  return null;
+}
+
+/**
+ * Checks if a message is a command for this bot, and extracts
+ * the command text.
+ */
+function getCommand(msg: Message): string | null {
+  if (!msg.content) return null;
+  const { content, guild } = msg;
+
+  if (getFirstCharacter(content) === COMMAND_DELIMITER) {
+    return content.substr(content.indexOf(COMMAND_DELIMITER) + 1);
+  } else if (guild?.me && msg.mentions.has(guild.me)) {
+    return content;
+  }
+
+  return null;
+}
+
+/** Returns the first non-whitespace character in a string, or null */
+function getFirstCharacter(text: string): string | null {
+  for (const char of text) {
+    if (char !== " ") return char;
+  }
+
+  return null;
+}
+
+/** Test if one of the keywords appears in the text */
+function has(text: string, keywords: string[]): boolean {
+  for (const keyword of keywords) {
+    if (text.indexOf(keyword) !== -1) return true;
+  }
+
+  return false;
 }
