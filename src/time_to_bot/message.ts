@@ -91,16 +91,27 @@ export const HANDLERS: {
     const letter = randomCharacter(LETTERS);
     const number = randomCharacter(NUMBERS);
 
+    await message.channel.send(
+      "A game of 🦎 Chameleon has started with " +
+        members.map((member) => `<@${member.id}>`).join(", ")
+    );
+
     // Send DMs to each member in the voice channel
     await Promise.all(
       members.map(async (member) => {
         const dm = await member.createDM();
         return dm.send(
-          member === chameleon
+          member.id === chameleon.id
             ? "You are the 🦎 Chameleon!"
             : `The item is ${letter}${number}`
         );
       })
+    );
+
+    logger.debug(
+      `The chameleon in ${message.guild!.name} is ${chameleon.displayName}${
+        chameleon.nickname ? ` (${chameleon.nickname})` : ""
+      }`
     );
 
     // Delete the message to avoid spam
