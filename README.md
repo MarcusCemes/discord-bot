@@ -98,12 +98,12 @@ The bot will respond to messages that either start with the command delimiter (c
 
 The bot analyses messages by trying to loosely match keywords to the message content to try and guess the user's intent. Here is a (possibly incomplete) list of supported actions, and some example keywords. For a full list, see the [source code](src/time_to_bot/message.ts).
 
-| Action    | Example triggers | Description                                               |   |   |
-|-----------|------------------|-----------------------------------------------------------|---|---|
-| GREET     | hey, hi          | Replies with a friendly greeting                          |   |   |
-| JOKE      | joke, funny      | Fetches a joke from a Joke API                            |   |   |
-| INSULT    | insult, mean     | Fetches an insult from an Insult API (requires a mention) |   |   |
-| CHAMELEON | chameleon        | A custom game, requires a 4x4 table of words.             |   |   |
+| Action    | Example triggers | Description                                               |
+|-----------|------------------|-----------------------------------------------------------|
+| GREET     | hey, hi          | Replies with a friendly greeting                          |
+| JOKE      | joke, funny      | Fetches a joke from a Joke API                            |
+| INSULT    | insult, mean     | Fetches an insult from an Insult API (requires a mention) |
+| CHAMELEON | chameleon        | A custom game, requires a 4x4 table of words.             |
 
 
 Here are some example messages you can try!
@@ -116,29 +116,15 @@ $ Hey! How are you?
 @bot_name, say something mean to @user_name
 ```
 
-<!-- ROADMAP -->
-## Roadmap
-
-See the [open issues](https://github.com/github_username/repo/issues) for a list of proposed features (and known issues).
-
-
 <!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
 
-<!-- CONTACT -->
-## Contact
-
-Your Name - [@MarcusCemes](https://twitter.com/MarcusCemes) - email
-
-Project Link: [https://github.com/MarcusCemes/discord-bot](https://github.com/MarcusCemes/discord-bot)
-
-
 <br />
 <div align="center">
-
-This is a fun and educational experiment! Use at your own risk!
-
+  <sub>
+    This is an educational experiment, use at your own risk!
+  </sub>
 </div>
